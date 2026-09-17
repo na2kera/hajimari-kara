@@ -12,15 +12,16 @@
   "dependencies": {
     "@cloudflare/vite-plugin": "latest",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
+    "hono": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "hono": "latest"
+    "typescript": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
-    "wrangler": "latest",
+    "@cloudflare/workers-types": "^5.20260917.1",
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "wrangler": "latest"
   }
 }
