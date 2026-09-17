@@ -1,0 +1,26 @@
+{
+  "name": "started-on",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/vite-plugin": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "typescript": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "hono": "latest"
+  },
+  "devDependencies": {
+    "wrangler": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}
