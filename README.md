@@ -17,7 +17,7 @@ npm run dev
 
 ```sh
 npx wrangler login
-npx wrangler d1 create started-on
+npx wrangler d1 create hajimari-kara
 # 表示されたdatabase_idをwrangler.jsoncに設定
 npm run db:migrate:remote
 npx wrangler secret put ADMIN_USER

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "started-on",
+  "name": "hajimari-kara",
   "compatibility_date": "2026-09-17",
   "main": "worker/index.ts",
   "assets": {
@@ -9,6 +9,6 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/admin", "/admin/*"]
   },
-  "d1_databases": [{ "binding": "DB", "database_name": "started-on", "database_id": "REPLACE_WITH_DATABASE_ID", "migrations_dir": "migrations" }],
+  "d1_databases": [{ "binding": "DB", "database_name": "hajimari-kara", "database_id": "REPLACE_WITH_DATABASE_ID", "migrations_dir": "migrations" }],
   "secrets": { "required": ["ADMIN_USER", "ADMIN_PASSWORD", "TURNSTILE_SITE_KEY", "TURNSTILE_SECRET"] }
 }

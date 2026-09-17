@@ -1,5 +1,5 @@
 {
-  "name": "started-on",
+  "name": "hajimari-kara",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,8 +8,8 @@
     "build": "vite build && find dist -name .dev.vars -delete && find dist -name .env -delete",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply started-on --local",
-    "db:migrate:remote": "wrangler d1 migrations apply started-on --remote"
+    "db:migrate:local": "wrangler d1 migrations apply hajimari-kara --local",
+    "db:migrate:remote": "wrangler d1 migrations apply hajimari-kara --remote"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "latest",
