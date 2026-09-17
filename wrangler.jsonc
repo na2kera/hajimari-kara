@@ -3,7 +3,12 @@
   "name": "started-on",
   "compatibility_date": "2026-09-17",
   "main": "worker/index.ts",
-  "assets": { "directory": "./dist", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/admin", "/admin/*"]
+  },
   "d1_databases": [{ "binding": "DB", "database_name": "started-on", "database_id": "REPLACE_WITH_DATABASE_ID", "migrations_dir": "migrations" }],
-  "secrets": { "required": ["ADMIN_USER", "ADMIN_PASSWORD"] }
+  "secrets": { "required": ["ADMIN_USER", "ADMIN_PASSWORD", "TURNSTILE_SITE_KEY", "TURNSTILE_SECRET"] }
 }
