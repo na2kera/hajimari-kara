@@ -95,11 +95,15 @@ async function verifyTurnstile(token: unknown, secret: string, ip: string, hostn
   }
 }
 
+function pageParam(value: string | undefined) {
+  const parsed = Number(value ?? '1');
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 100000) : 1;
+}
+
 app.get('/api/config', c => c.json({ turnstileSiteKey: c.env.TURNSTILE_SITE_KEY }, 200, { 'Cache-Control': 'no-store' }));
 
 app.get('/api/events', async c => {
-  const pageValue = Number(c.req.query('page') ?? '1');
-  const page = Number.isInteger(pageValue) && pageValue > 0 ? Math.min(pageValue, 100000) : 1;
+  const page = pageParam(c.req.query('page'));
   const sort = c.req.query('sort') ?? 'new';
   const order = sort === 'days' ? 'start_date ASC, id DESC'
     : sort === 'daysAsc' ? 'start_date DESC, id DESC' : 'created_at DESC, id DESC';
@@ -146,8 +150,12 @@ app.get('/admin/*', async c => {
 
 app.use('/api/admin/*', adminAuth);
 app.get('/api/admin/events', async c => {
-  const rows = await c.env.DB.prepare('SELECT * FROM events ORDER BY created_at DESC, id DESC').all<EventRow>();
-  return c.json(rows.results ?? [], 200, { 'Cache-Control': 'no-store' });
+  const page = pageParam(c.req.query('page'));
+  const count = await c.env.DB.prepare('SELECT COUNT(*) AS total FROM events').first<{ total: number }>();
+  const rows = await c.env.DB.prepare('SELECT * FROM events ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?')
+    .bind(PAGE_SIZE, (page - 1) * PAGE_SIZE).all<EventRow>();
+  return c.json({ events: rows.results ?? [], total: count?.total ?? 0, page, pageSize: PAGE_SIZE },
+    200, { 'Cache-Control': 'no-store' });
 });
 app.patch('/api/admin/events/:id', async c => {
   const id = Number(c.req.param('id'));
