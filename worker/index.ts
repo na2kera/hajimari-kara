@@ -62,9 +62,17 @@ async function hashIp(ip: string) {
   return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join('');
 }
 
-async function withinSubmissionLimit(db: D1Database, ip: string) {
+function currentWindowStart() {
+  return Math.floor(Date.now() / 1000 / WINDOW_SECONDS) * WINDOW_SECONDS;
+}
+
+function pruneSubmissionLimits(db: D1Database, windowStart: number) {
+  return db.prepare('DELETE FROM submission_rate_limits WHERE window_start < ?')
+    .bind(windowStart).run().then(() => undefined, () => undefined);
+}
+
+async function withinSubmissionLimit(db: D1Database, ip: string, windowStart: number) {
   const hash = await hashIp(ip);
-  const windowStart = Math.floor(Date.now() / 1000 / WINDOW_SECONDS) * WINDOW_SECONDS;
   const row = await db.prepare(`
     INSERT INTO submission_rate_limits (ip_hash, window_start, count)
     VALUES (?, ?, 1)
@@ -72,8 +80,8 @@ async function withinSubmissionLimit(db: D1Database, ip: string) {
       window_start = excluded.window_start,
       count = CASE WHEN submission_rate_limits.window_start = excluded.window_start
                    THEN submission_rate_limits.count + 1 ELSE 1 END
-    WHERE submission_rate_limits.window_start <> excluded.window_start
-       OR submission_rate_limits.count < ?
+    WHERE submission_rate_limits.window_start < excluded.window_start
+       OR (submission_rate_limits.window_start = excluded.window_start AND submission_rate_limits.count < ?)
     RETURNING count
   `).bind(hash, windowStart, MAX_SUBMISSIONS_PER_WINDOW).first<{ count: number }>();
   return row !== null;
@@ -116,11 +124,13 @@ app.post('/api/events', async c => {
   if (!input || body.website) return c.json({ error: '名前と開始日を確認してください。' }, 400);
   const ip = c.req.header('cf-connecting-ip') ?? 'unknown';
   const hostname = new URL(c.req.url).hostname;
+  const windowStart = currentWindowStart();
+  if (!(await withinSubmissionLimit(c.env.DB, ip, windowStart))) {
+    return c.json({ error: '投稿が多すぎます。少し待ってから再試行してください。' }, 429);
+  }
+  c.executionCtx.waitUntil(pruneSubmissionLimits(c.env.DB, windowStart));
   if (!(await verifyTurnstile(body.turnstileToken, c.env.TURNSTILE_SECRET, ip, hostname))) {
     return c.json({ error: '認証に失敗しました。もう一度お試しください。' }, 403);
-  }
-  if (!(await withinSubmissionLimit(c.env.DB, ip))) {
-    return c.json({ error: '投稿が多すぎます。少し待ってから再試行してください。' }, 429);
   }
   const result = await c.env.DB.prepare('INSERT INTO events (title, start_date, description) VALUES (?, ?, ?)')
     .bind(input.title, input.startDate, input.description).run();
