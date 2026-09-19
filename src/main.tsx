@@ -88,6 +88,16 @@ function TurnstileWidget({ siteKey, onToken, onError }: {
   return <div className="turnstile" ref={container} />;
 }
 
+function Pagination({ page, pageCount, onChange }: {
+  page: number; pageCount: number; onChange: (page: number) => void;
+}) {
+  return <nav className="pagination" aria-label="一覧のページ">
+    <button disabled={page <= 1} onClick={() => onChange(page - 1)}>前へ</button>
+    <span>{page} / {pageCount} ページ</span>
+    <button disabled={page >= pageCount} onClick={() => onChange(page + 1)}>次へ</button>
+  </nav>;
+}
+
 function App() {
   if (location.pathname.startsWith('/admin')) return <Admin />;
   return <PublicApp />;
@@ -210,30 +220,36 @@ function PublicApp() {
           <strong>{mode === 'days' ? `${elapsed(item.start_date).toLocaleString()}日`
             : anniversaryLabel(item.start_date)}</strong>
         </article>)}</div>}
-    {!loading && !listError && total > 20 && <nav className="pagination" aria-label="一覧のページ">
-      <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>前へ</button>
-      <span>{page} / {pageCount} ページ</span>
-      <button disabled={page >= pageCount} onClick={() => setPage(value => value + 1)}>次へ</button>
-    </nav>}
+    {!loading && !listError && total > 20 && <Pagination page={page} pageCount={pageCount} onChange={setPage} />}
   </main>;
 }
 
 function Admin() {
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<EventItem | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const load = async () => {
+  const request = useRef(0);
+  const load = async (target = page) => {
+    const id = ++request.current;
     try {
-      const response = await fetch('/api/admin/events');
+      const response = await fetch(`/api/admin/events?page=${target}`);
       if (!response.ok) throw new Error(await responseError(response));
-      setEvents(await response.json() as EventItem[]);
+      const data = await response.json() as EventPage;
+      if (id !== request.current) return;
       setError('');
-    } catch (cause) { setError(String(cause instanceof Error ? cause.message : cause)); }
-    finally { setLoading(false); }
+      if (data.events.length === 0 && data.page > 1) { setPage(data.page - 1); return; }
+      setEvents(data.events); setTotal(data.total); setPageSize(data.pageSize);
+    } catch (cause) {
+      if (id === request.current) setError(String(cause instanceof Error ? cause.message : cause));
+    }
+    finally { if (id === request.current) setLoading(false); }
   };
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { setLoading(true); void load(page); }, [page]);
   async function update(item: EventItem, status = item.status ?? 'published') {
     setSaving(true); setError('');
     try {
@@ -258,6 +274,7 @@ function Admin() {
     } catch (cause) { setError(String(cause instanceof Error ? cause.message : cause)); }
     finally { setSaving(false); }
   }
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
   return <main>
     <header><div><p className="eyebrow">ADMIN</p><h1>投稿を管理</h1>
       <p className="lead">内容の修正と公開状態の変更ができます。</p></div>
@@ -288,6 +305,7 @@ function Admin() {
           <button disabled={saving} className="danger" onClick={() => void remove(item.id)}>削除</button>
         </div>
       </article>)}</div>
+      {total > pageSize && <Pagination page={page} pageCount={pageCount} onChange={setPage} />}
     </>}
   </main>;
 }
