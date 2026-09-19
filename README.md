@@ -4,6 +4,8 @@
 
 ## ローカル起動
 
+Node.js 22 以上が必要です。
+
 ```sh
 npm install
 cp .dev.vars.example .dev.vars

@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "volta": {
+    "node": "22.13.1"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && find dist -name .dev.vars -delete && find dist -name .env -delete",
@@ -12,18 +18,18 @@
     "db:migrate:remote": "wrangler d1 migrations apply hajimari-kara --remote"
   },
   "dependencies": {
-    "@cloudflare/vite-plugin": "latest",
-    "@vitejs/plugin-react": "latest",
-    "hono": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "typescript": "latest",
-    "vite": "latest"
+    "hono": "^4.13.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.11",
     "@cloudflare/workers-types": "^5.20260917.1",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "wrangler": "latest"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "wrangler": "^4.133.0"
   }
 }
